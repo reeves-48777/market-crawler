@@ -1,7 +1,15 @@
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
-import ResearchButton from './research-button';
 import JobView from './job-view';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 export default async function ResearchTester() {
   const session = await auth();
@@ -10,13 +18,18 @@ export default async function ResearchTester() {
     throw new Error('User not authenticated');
   }
 
-  const offers = await prisma.jobOffer.findMany({
+  const latestSearch = await prisma.jobSearch.findFirst({
     where: {
-      research: {
-        userId: session.user.id,
-      },
+      userId: session.user.id,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    include: {
+      offers: true,
     },
   });
+  const offers = latestSearch?.offers || [];
 
   return (
     <>
@@ -28,7 +41,28 @@ export default async function ResearchTester() {
           />
         ))}
       </div>
-      <ResearchButton />
+      <Pagination className='mt-8'>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious />
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationLink isActive>1</PaginationLink>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationLink>2</PaginationLink>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationLink>3</PaginationLink>
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationEllipsis />
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationNext />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </>
   );
 }
