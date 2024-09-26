@@ -6,7 +6,6 @@ import {
   PopoverContent,
 } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
