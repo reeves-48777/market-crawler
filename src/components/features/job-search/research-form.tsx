@@ -1,5 +1,7 @@
 'use client';
 
+import { jobSearchAction } from '@/actions/job-search.action';
+
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -8,10 +10,8 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,12 @@ import { Search } from 'lucide-react';
 
 import SalaryRange from './salary-range';
 import MultiSelect from './multi-select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { useRouter } from 'next/navigation';
 
 const ContractTypeEnum = z.enum([
   'freelance',
@@ -31,8 +37,11 @@ const ContractTypeEnum = z.enum([
 const RemoteModeEnum = z.enum(['full', 'partial', 'none']);
 
 const researchFormSchema = z.object({
-  search: z.string().min(0),
-  duration: z.number().min(1).max(36),
+  search: z.string().min(1),
+  duration: z.coerce
+    .number()
+    .min(1, 'You cannot select a duration of 0 months')
+    .max(36),
   salary: z.object({
     daily: z.number().min(0).max(2000, "woooow isn't it a lot of money ?"),
     annual: z
@@ -45,23 +54,50 @@ const researchFormSchema = z.object({
 });
 
 export function ResearchForm() {
+  const router = useRouter();
   const form = useForm<z.infer<typeof researchFormSchema>>({
     resolver: zodResolver(researchFormSchema),
     defaultValues: {
       search: '',
       salary: {
-        daily: 0,
-        annual: 0,
+        daily: 350,
+        annual: 30000,
       },
-      contractType: [],
-      remoteMode: [],
+      duration: 6,
+      contractType: ['freelance'],
+      remoteMode: ['full'],
     },
   });
 
-  function onSubmit(values: z.infer<typeof researchFormSchema>) {
+  async function onSubmit(values: z.infer<typeof researchFormSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     console.log(values);
+    await jobSearchAction({
+      page: 1,
+      itemsPerPage: 16,
+      searchKeywords: values.search,
+      minDuration: values.duration,
+      contracts: values.contractType.map((val) => {
+        switch (val) {
+          case 'freelance':
+            return 'contractor';
+          case 'fixed':
+            return 'fixed-term';
+          case 'contract':
+            return 'permanent';
+          case 'internship':
+            return 'internship';
+          case 'apprenticeship':
+            return 'apprenticeship';
+        }
+      }),
+      minDailySalary: values.salary.daily,
+      minAnnualSalary: values.salary.annual,
+      remoteMode: values.remoteMode,
+    });
+
+    router.refresh();
   }
 
   return (
@@ -91,6 +127,7 @@ export function ResearchForm() {
             variant='secondary'
             size='icon'
             className='size-10'
+            onClick={form.handleSubmit(onSubmit)}
           >
             <Search size={14} />
           </Button>
@@ -110,18 +147,33 @@ export function ResearchForm() {
               </FormItem>
             )}
           />
-          <Button
-            variant='outline'
-            className='text-muted-foreground'
-          >
-            Location
-          </Button>
-          <Button
-            variant='outline'
-            className='text-muted-foreground'
-          >
-            Duration
-          </Button>
+          <FormField
+            control={form.control}
+            name='duration'
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant='outline'
+                        className='text-muted-foreground'
+                      >
+                        Duration
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent>
+                      <Input
+                        {...field}
+                        placeholder='Number of months'
+                      />
+                    </PopoverContent>
+                    <FormMessage />
+                  </Popover>
+                </FormControl>
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name='contractType'
