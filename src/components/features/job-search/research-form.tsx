@@ -12,12 +12,13 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 
-import SalaryRange from './salary-range';
+import SalaryForm from './salary-form';
 import MultiSelect from './multi-select';
 import {
   Popover,
@@ -139,10 +140,7 @@ export function ResearchForm() {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <SalaryRange
-                    {...field}
-                    schema={researchFormSchema.shape.salary}
-                  />
+                  <SalaryForm {...field} />
                 </FormControl>
               </FormItem>
             )}
@@ -163,7 +161,11 @@ export function ResearchForm() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent>
+                      <FormLabel htmlFor='duration'>
+                        Minimum duration (in months)
+                      </FormLabel>
                       <Input
+                        id='duration'
                         {...field}
                         placeholder='Number of months'
                       />
