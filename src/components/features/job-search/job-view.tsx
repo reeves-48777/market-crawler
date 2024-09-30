@@ -5,10 +5,11 @@ import {
   CardDescription,
   CardContent,
 } from '@/components/ui/card';
+import { JobOffer } from '@prisma/client';
 import { Clock, Laptop, PiggyBank, Signature } from 'lucide-react';
 
 type JobViewProps = {
-  job: any;
+  job: JobOffer | any;
 };
 
 export default function JobView({ job }: JobViewProps) {
